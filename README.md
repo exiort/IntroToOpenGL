@@ -51,7 +51,7 @@ project_root/
 - Color support for Object3D has been postponed, as creating a Texture class may provide more flexibility and benefit in the long term.
 - Calculating and storing normal vectors for faces has been deferred. Developing general methods for all polygons and non-planar surfaces introduces significant complexity at this stage.
 - Rotation operations around a pivot currently involve to_origin and to_pivot matrices for each transformation. While optimizing this for better performance has been considered, it has been postponed for now as it is not a priority at this stage.
--All assignments completed throughout this semester will be available in the github.com/exiort/IntroToOpenGL repository. In line with the incremental nature of the assignments, each week's submission will be stored in a dedicated branch named week-n. It is highly recommended to check these branches weekly to follow the progress and changes over time.
+- All assignments completed throughout this semester will be available in the github.com/exiort/IntroToOpenGL repository. In line with the incremental nature of the assignments, each week's submission will be stored in a dedicated branch named week-n. It is highly recommended to check these branches weekly to follow the progress and changes over time.
 
 ---
 
