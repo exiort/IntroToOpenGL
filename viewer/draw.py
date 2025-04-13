@@ -33,8 +33,6 @@ FPS = 30
 
 timer = Timer(FPS)
 
-print(triangle_pivot)
-print(triangle.data.vertices)
 def draw_scene():
     global rotation_angle
 
