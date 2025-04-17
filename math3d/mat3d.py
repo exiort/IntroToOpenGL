@@ -105,5 +105,79 @@ class Mat3D:
         m.matrix[2][2] = sz
         return m
 
+    @staticmethod
+    def look_at(eye:Vec3D, center:Vec3D, up:Vec3D) -> Mat3D:
+        f = (center - eye).normalize()
+        s = f.cross(up).normalize()
+        u = s.cross(f)
 
+        tx = -s.dot(eye)
+        ty = -u.dot(eye)
+        tz = f.dot(eye)
+        return Mat3D([
+            [s.x, s.y, s.z, tx],
+            [u.x, u.y, u.z, ty],
+            [-f.x, -f.y, -f.z, tz],
+            [0, 0, 0, 1]
+        ])
 
+    @staticmethod
+    def perspective(fov:float, aspect_ratio:float, near:float, far:float) -> Mat3D:
+        f = 1 / math.tan(math.radians(fov) / 2)
+        nf = 1 / (near - far)
+
+        return Mat3D([
+            [f/aspect_ratio, 0, 0, 0],
+            [0, f, 0, 0],
+            [0, 0, (far+near)*nf, (2*far*near)*nf],
+            [0, 0, -1, 0]
+        ])
+
+    @staticmethod
+    def orthographic(left:float, right:float, bottom:float, top:float, near:float, far:float) -> Mat3D:
+        rl = 1.0 / (right - left)
+        tb = 1.0 / (top - bottom)
+        fn = 1.0 / (far - near)
+
+        sx = 2.0 * rl
+        sy = 2.0 * tb
+        sz = -2.0 * fn
+        
+        tx = -(right + left) * rl
+        ty = -(top + bottom) * tb
+        tz = -(far + near) * fn
+
+        return Mat3D([
+            [sx,  0.0, 0.0, tx ],
+            [0.0, sy,  0.0, ty ],
+            [0.0, 0.0, sz,  tz ],
+            [0.0, 0.0, 0.0, 1.0]
+        ])
+    
+    @staticmethod
+    def rotation_around_axis(axis:Vec3D, angle_rad:float) -> Mat3D:
+        norm_axis = axis.normalize()
+        x, y, z, _ = norm_axis.flatten()
+        
+        cos = math.cos(angle_rad)
+        sin = math.sin(angle_rad)
+        omc = 1-cos
+        
+        r00 = x**2 * omc + cos
+        r01 = x * y * omc - z * sin
+        r02 = x * z * omc + y * sin
+
+        r10 = y * x * omc + z * sin
+        r11 = y**2 * omc + cos
+        r12 = y * z * omc - x * sin
+
+        r20 = z * x * omc - y * sin
+        r21 = z * y * omc + x * sin
+        r22 = z**2 * omc + cos
+
+        return Mat3D([
+            [r00, r01, r02, 0],
+            [r10, r11, r12, 0],
+            [r20, r21, r22, 0],
+            [0, 0, 0, 1]
+        ])

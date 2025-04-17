@@ -15,7 +15,7 @@ def create_base_triangle(name:str="Triange") -> Object3D:
     v2 = Vertex(Vec3D(1, -1, 0))
 
     edges = [Edge(v0, v1), Edge(v1, v2), Edge(v2, v0)]
-    face = Face([v0, v1, v2])
+    face = Face([v0, v1, v2], 0)
     mesh = Mesh(name, vertices=[v0, v1, v2], edges=edges, faces=[face])
     return Object3D(name, mesh)
 
@@ -27,7 +27,7 @@ def create_base_square(name:str="Square") -> Object3D:
     v3 = Vertex(Vec3D(1, 1, 0))
 
     edges = [Edge(v0, v1), Edge(v1, v2), Edge(v2, v3), Edge(v3, v0)]
-    face = Face([v0, v1, v2, v3])
+    face = Face([v0, v1, v2, v3], 0)
     mesh = Mesh(name, vertices=[v0, v1, v2, v3], edges=edges, faces=[face])
     return Object3D(name, mesh)
 

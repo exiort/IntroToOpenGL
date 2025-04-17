@@ -24,8 +24,8 @@ class Edge:
         return Edge(vertex_map[self.v1], vertex_map[self.v2])
     
     def length(self) -> float:
-        return (self.v1.possition - self.v2.possition).magnitude()
+        return (self.v1.position - self.v2.position).magnitude()
 
     def midpoint(self) -> Vec3D:
-        return (self.v1.possition + self.v2.possition) * 0.5
+        return (self.v1.position + self.v2.position) * 0.5
 
