@@ -9,17 +9,17 @@ from math3d import Vec3D, Mat3D
 
 
 class Vertex:
-    possition: Vec3D
+    position: Vec3D
 
     def __init__(self, position:Vec3D) -> None:
-        self.possition = position
+        self.position = position
 
     def __repr__(self) -> str:
-        return f"Vertex with: {self.possition}"
+        return f"Vertex with: {self.position}"
 
     def copy(self) -> Vertex:
-        return Vertex(self.possition.copy())
+        return Vertex(self.position.copy())
         
     def transform(self, matrix:Mat3D):
-        self.possition = matrix * self.possition
+        self.position = matrix * self.position
 

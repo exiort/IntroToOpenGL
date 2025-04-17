@@ -4,6 +4,7 @@
 # April 2025
 
 from __future__ import annotations
+from camera import Camera
 from math3d import Mat3D
 from geometry import Mesh
 
@@ -15,9 +16,9 @@ class Object3D:
     redo_stack:list[Mat3D]
     crr_transform:Mat3D
     is_transform_changed:bool
-    data:Mesh
+    data:Mesh|Camera
     
-    def __init__(self, name="Default", data:Mesh|None=None) -> None:
+    def __init__(self, name="Default", data:Mesh|Camera|None=None) -> None:
         self.name = name
         self.do_stack = []
         self.redo_stack = []
@@ -75,16 +76,14 @@ class Object3D:
     def apply_transform(self) -> None:
         if self.is_transform_changed:
             self.compute_transformation()
-        self.data.transform(self.crr_transform)
+        self.data.apply_transform(self.crr_transform)
         self.do_stack.clear()
         self.redo_stack.clear()
         self.crr_transform = Mat3D.identity()
         self.is_transform_changed = False
 
-    def bake(self) -> Object3D:
+    def get_m2w_matrix(self) -> Mat3D:
         if self.is_transform_changed:
             self.compute_transformation()
-        baked_data = self.data.copy()
-        baked_data.transform(self.crr_transform)
-        return Object3D(f"{self.name}_Baked", baked_data)
-        
+        return self.crr_transform
+

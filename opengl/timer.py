@@ -26,7 +26,7 @@ class Timer:
         return time.time() - self.last_time
 
     def is_next_frame(self) -> bool:
-        if self.TPF > (time.time() - self.peak()):
+        if self.TPF > self.peak():
             return False
         self.delta()
         return True
