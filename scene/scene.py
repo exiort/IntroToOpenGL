@@ -15,7 +15,8 @@ class Scene:
     root_collection:Collection
     
     active_camera:Object3D
-
+    active_object:Object3D|None
+    
     default_camera_position:Vec3D
     default_camera_target:Vec3D
     default_camera_up:Vec3D
@@ -28,7 +29,8 @@ class Scene:
         self.default_camera_up = Vec3D(0, 0, 1)
 
         self.active_camera = Object3D("DefaultCam", Camera(self.default_camera_position, self.default_camera_target, self.default_camera_up))
-
+        self.active_object = None
+        
         grid_collection = Collection("WorldGrid")
         for obj in create_grid_lines(count=51):
             grid_collection.add_object(obj, is_visible=True)
@@ -40,6 +42,12 @@ class Scene:
     def get_active_camera(self) -> Object3D:
         return self.active_camera
 
+    def set_active_object(self, active_object:Object3D|None) -> None:
+        self.active_object = active_object
+
+    def get_active_object(self) -> Object3D|None:
+        return self.active_object
+    
     def get_visible_objects(self) -> list[Object3D]:
         return self.root_collection.get_all_visible_object()
 
