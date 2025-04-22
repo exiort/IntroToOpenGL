@@ -42,7 +42,19 @@ class Mat3D:
 
     def copy(self) -> Mat3D:
         return Mat3D([row[:] for row in self.matrix])
-    
+
+    def transpose(self) -> Mat3D:
+        rows = len(self.matrix)
+        columns = len(self.matrix[0])
+
+        new_matrix_values:list[list[float]] = [[0 for _ in range(rows)] for _ in range(columns)]
+
+        for i in range(rows):
+            for j in range(columns):
+                new_matrix_values[j][i] = self.matrix[i][j]
+
+        return Mat3D(new_matrix_values)
+                
     @staticmethod
     def identity():
         m = Mat3D()

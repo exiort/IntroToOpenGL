@@ -3,13 +3,15 @@
 # StudentId: 280201012
 # April 2025
 
+import math
 from generators import create_box
 from geometry import Mesh
 from math3d import Vec3D, Mat3D
 from scene import Scene
 from camera import Camera
-from object3d import Object3D
-import sys
+from parser import parse_file
+
+
 
 class InputHandler:
     scene:Scene
@@ -20,9 +22,11 @@ class InputHandler:
     
     __mouse_state:dict[str, bool]
     __last_mouse_position:dict[str,int]
-
-    __active_object:Object3D|None
-    
+    __shift_key_pressed:bool
+    __ctrl_key_pressed:bool
+    __alt_key_pressed:bool
+    __a_key_pressed:bool
+        
     def __init__(self, scene:Scene, orbit_sensitivity:float=0.008, pan_sensitivity:float=0.008, dolly_sensitivity:float=0.75) -> None:
         self.scene = scene
 
@@ -33,36 +37,114 @@ class InputHandler:
         self.__pan_sensitivity = pan_sensitivity
         self.__dolly_sensitivity = dolly_sensitivity
 
-        self.__active_object = None
+        self.__shift_key_pressed = False
+        self.__ctrl_key_pressed = False
+        self.__alt_key_pressed = False
+        self.__a_key_pressed = False        
+
+    def get_current_sub_division_level(self) -> int:
+        obj = self.scene.get_active_object()
+        if obj is None:
+            return -1
+        elif not isinstance(obj.data, Mesh):
+            return -1
+        else:
+            return obj.data.current_subdivision_level
         
     def handle_key_press(self, key_char:str) -> bool:
-        if key_char == "q" or key_char == "Q":
-            sys.exit()
-            
-        elif key_char in ["w", "W", "a", "A", "s", "S", "d", "D"]:
-            if key_char == "w" or key_char == "W":
-                return self.__handle_movement(True, 1)
-            elif key_char == "s" or key_char == "S":
-                return self.__handle_movement(True, -1)
-            elif key_char == "a" or key_char == "A":
-                return self.__handle_movement(False, -1)
-            elif key_char == "d" or key_char == "D":
-                return self.__handle_movement(False, 1)
-        elif key_char == "f" or key_char == "F":
+        if key_char == "a":
+            self.__a_key_pressed = True
+            return False
+        elif key_char == "f":
             return self.__reset_camera()
         elif key_char == "0":
+            if self.__a_key_pressed:
+                return self.__load_object()
+            
             self.scene.change_grid_visibility()
             return True
-        elif key_char == "1":
-            return self.__add_object()
-        elif key_char == "2":
-            return self.__remove_object()
         elif key_char == "+":
             return self.__increase_subdivision()
         elif key_char == "-":
             return self.__decrease_subdivision()
+        elif key_char == "1":
+            if self.__a_key_pressed:
+                return self.__add_object(1)
+        elif key_char.encode() == b'\x7f':
+            return self.__remove_object()
+        elif key_char == "z":
+            active_obj = self.scene.get_active_object()
+            if active_obj is not None:
+                active_obj.undo_transform()
+                return True
+        elif key_char == "r":
+            active_obj = self.scene.get_active_object()
+            if active_obj is not None:
+                active_obj.redo_transform()
+                return True
+            
+        return False
+
+    def handle_key_release(self, key_char:str) -> None:
+        if key_char == "a" or key_char == "A":
+            self.__a_key_pressed = False
+
+    def handle_special_key_press(self, key:int) -> bool:
+        if key == 100: #left arrow
+            if self.__shift_key_pressed:
+                return self.__handle_camera_movement(False, -1)
+            elif self.__alt_key_pressed:
+                return self.__translate_active_object(0, -1, 0)
+            else:
+                return self.__rotate_active_object_verticaly(-1)
+            
+        elif key == 101: #up arrow
+            if self.__shift_key_pressed:
+                return self.__handle_camera_movement(True, 1)
+            elif self.__alt_key_pressed:
+                return self.__translate_active_object(1, 0, 0)
+            elif self.__ctrl_key_pressed:
+                return self.__scale_active_object(1.1)
+            else:
+                return self.__rotate_active_object_horizontaly(1)
+            
+        elif key == 102: #right arrow
+            if self.__shift_key_pressed:
+                return self.__handle_camera_movement(False, 1)
+            elif self.__alt_key_pressed:
+                return self.__translate_active_object(0, 1, 0)
+            else:
+                return self.__rotate_active_object_verticaly(1)
+        
+        elif key == 103: #down arrow
+            if self.__shift_key_pressed:
+                return self.__handle_camera_movement(True, -1)
+            elif self.__alt_key_pressed:
+                return self.__translate_active_object(-1, 0, 0)
+            elif self.__ctrl_key_pressed:
+                return self.__scale_active_object(0.9)
+            else:
+                return self.__rotate_active_object_horizontaly(-1)
+            
+        elif key == 112: #shift
+            self.__shift_key_pressed = True
+            return False
+        elif key == 114: #ctrl
+            self.__ctrl_key_pressed = True
+            return False
+        elif key == 116: #alt
+            self.__alt_key_pressed = True
+            return False
         
         return False
+
+    def handle_special_key_release(self, key:int) -> None:
+        if key == 112:
+            self.__shift_key_pressed = False
+        elif key == 114:
+            self.__ctrl_key_pressed = False
+        elif key == 116:
+            self.__alt_key_pressed = False
     
     def handle_mouse_wheel(self, direction:int) -> bool:
         return self.__handle_dolly(direction)
@@ -83,6 +165,8 @@ class InputHandler:
         return False
     
     def handle_mouse_drag(self, x:int, y:int) -> bool:
+        if not self.__shift_key_pressed:
+            return False
         redraw_needed = False
         left_pressed = self.__mouse_state["left"]
         right_pressed = self.__mouse_state["right"]
@@ -99,25 +183,79 @@ class InputHandler:
 
         return redraw_needed
 
-    def __add_object(self) -> bool:
-        if self.__active_object is not None:
+    def __add_object(self, obj_id:int) -> bool:
+        active_obj = self.scene.get_active_object()
+        if active_obj is not None:
+            return False
+
+        if obj_id == 1:
+            obj  = create_box("Box", 4, 4, 4)
+            self.scene.add_object(obj)
+            self.scene.set_active_object(obj)
+            return True
+        return False
+    
+    def __load_object(self) -> bool:
+        active_obj = self.scene.get_active_object()
+        if active_obj is not None:
+            return False
+
+        filepath = input("Please Provide path of .obj file:")
+        obj = parse_file(filepath, Vec3D(0,1,0), Vec3D(0, 0, -1))
+        if obj is None:
+            return False
+
+        self.scene.add_object(obj)
+        self.scene.set_active_object(obj)
+        return True
+        
+    def __remove_object(self) -> bool:
+        active_obj = self.scene.get_active_object()
+        if active_obj is None:
+            return False
+        self.scene.set_active_object(None)
+        self.scene.remove_object(active_obj)
+        return True
+
+    def __rotate_active_object_verticaly(self, direction:int) -> bool:
+        active_obj = self.scene.get_active_object()
+        if active_obj is None:
+            return False
+
+        rotation = Mat3D.rotation("z", math.pi/36 * direction)
+        active_obj.do_transform(rotation)
+        return True
+
+    def __rotate_active_object_horizontaly(self, direction:int) -> bool:
+        active_obj = self.scene.get_active_object()
+        if active_obj is None:
+            return False
+        rotation = Mat3D.rotation("x", math.pi/36 * direction)
+        active_obj.do_transform(rotation)
+        return True
+
+    def __translate_active_object(self, tx:int, ty:int, tz:int) -> bool:
+        active_obj = self.scene.get_active_object()
+        if active_obj is None:
+            return False
+        translation = Mat3D.translation(tx, ty, tz)
+        active_obj.do_transform(translation)
+        return True
+
+    def __scale_active_object(self, direction:float):
+        active_obj = self.scene.get_active_object()
+        if active_obj is None:
             return False
         
-        self.__active_object = create_box("Box", 10, 10, 10)
-        self.scene.add_object(self.__active_object)
+        scaling = Mat3D.scaling(direction, direction, direction)
+        active_obj.do_transform(scaling)
         return True
-
-    def __remove_object(self) -> bool:
-        if self.__active_object is None:
-            return False
-        self.scene.remove_object(self.__active_object)
-        self.__active_object = None
-        return True
-
+        
     def __increase_subdivision(self) -> bool:
-        if self.__active_object is None:
+        active_obj = self.scene.get_active_object()
+        if active_obj is None:
             return False
-        mesh = self.__active_object.data
+        mesh = active_obj.data
         if not isinstance(mesh, Mesh):
             return False
 
@@ -126,9 +264,10 @@ class InputHandler:
         return True
     
     def __decrease_subdivision(self) -> bool:
-        if self.__active_object is None:
+        active_obj = self.scene.get_active_object()
+        if active_obj is None:
             return False
-        mesh = self.__active_object.data
+        mesh = active_obj.data
         if not isinstance(mesh, Mesh):
             return False
         mesh.decrease_subdivision_level()
@@ -225,7 +364,7 @@ class InputHandler:
         return True
 
 
-    def __handle_movement(self, is_fwd:bool, direction:int) -> bool:
+    def __handle_camera_movement(self, is_fwd:bool, direction:int) -> bool:
         cam_obj = self.scene.get_active_camera()
         if cam_obj is None:
             return False
