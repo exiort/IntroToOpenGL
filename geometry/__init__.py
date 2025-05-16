@@ -7,5 +7,6 @@ from .vertex import Vertex
 from .edge import Edge
 from .face import Face
 from .mesh import Mesh
+from .utils import edge_extractor
 
-__all__ = ["Vertex", "Edge", "Face", "Mesh"]
+__all__ = ["Vertex", "Edge", "Face", "Mesh", "edge_extractor"]
