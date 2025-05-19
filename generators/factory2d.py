@@ -1,94 +1,88 @@
-# CENG 487 Assignment1 by
+# CENG 487 Assignment4 by
 # Bugrahan Imal
 # StudentId: 280201012
-# April 2025
-
-from .basefactory2d import create_base_square, create_base_triangle
-from object3d.object3d import Object3D
-from math3d import Mat3D, Vec3D
-from geometry import Vertex, Edge, Face
+# May 2025
+from math3d import Vec3D
+from geometry import Vertex, Face, Mesh, edge_extractor
+from object3d import Object3D
 import math
 
 
 
-def create_triangle(
-        name:str="Triangle",
-        sx:float=1, sy:float=1, sz:float=1,
-) -> Object3D:
-    base_triangle = create_base_triangle(name)
-    base_triangle.do_transform(Mat3D.scaling(sx, sy, sz))
-    base_triangle.apply_transform()
-    return base_triangle
+def _create_square_geometry(size:float = 2) -> tuple[list[Vertex], list[Face]]:
+    h = size / 2
+    vertices = [
+        Vertex(Vec3D(-h, -h, 0)),
+        Vertex(Vec3D(h, -h, 0)),
+        Vertex(Vec3D(h, h, 0)),
+        Vertex(Vec3D(-h, h, 0))
+    ]
 
-def create_square(
-        name:str="Square",
-        sx:float=1, sy:float=1, sz:float=1
-)-> Object3D:
-    base_square = create_base_square(name)
-    base_square.do_transform(Mat3D.scaling(sx, sy, sz))
-    base_square.apply_transform()
-    return base_square
+    faces = [Face([vertices[0], vertices[1], vertices[2], vertices[3]], 0)]
 
+    return vertices, faces
 
-def __create_oriented_quad(width:float, height:float, center:Vec3D, normal:Vec3D, up:Vec3D, surface_id:int) -> tuple[list[Vertex], list[Face]]:
-    norm = normal.normalize()
-    up_norm = up.normalize()
+def create_square_object(name:str="Square", size:float=2) -> Object3D:
+    vertices, faces = _create_square_geometry(size)
+    edges = edge_extractor(vertices, faces)
+    mesh = Mesh(name, vertices, edges, faces)
+    obj = Object3D(name, mesh)
 
-    #Gram-Schmidt
-    right_norm = up_norm.cross(norm).normalize()
-    up_norm = norm.cross(right_norm).normalize()
+    return obj
 
-    hw = width / 2
-    hh = height / 2
+def _create_triangle_geometry() -> tuple[list[Vertex], list[Face]]:
+    vertices = [
+        Vertex(Vec3D(0, 1, 0)),
+        Vertex(Vec3D(-math.sqrt(3)/2, -0.5, 0)),
+        Vertex(Vec3D(math.sqrt(3)/2, -0.5, 0))
+    ]
 
-    right_vec = right_norm * hw
-    up_vec = up_norm * hh
+    faces = [Face([vertices[0], vertices[1], vertices[2]], 0)]
+
+    return vertices, faces
+
+def create_triangle_object(name:str="Triangle") -> Object3D:
+    vertices, faces = _create_triangle_geometry()
+    edges = edge_extractor(vertices, faces)
+    mesh = Mesh(name, vertices, edges, faces)
+    obj = Object3D(name, mesh)
+
+    return obj 
     
-    position0 = center - right_vec - up_vec
-    position1 = center +  right_vec - up_vec
-    position2 = center + right_vec + up_vec
-    position3 = center - right_vec + up_vec
+def _create_disk_geometry(radius:float=1, segments:int=16) -> tuple[list[Vertex], list[Face]]:
+    if segments < 3:
+        segments = 3
 
-    v0 = Vertex(position0)
-    v1 = Vertex(position1)
-    v2 = Vertex(position2)
-    v3 = Vertex(position3)
-    vertices = [v0, v1, v2, v3]
+    vertices:list[Vertex] = []
+    faces:list[Face] = []
 
-    face = Face(vertices, surface_id)
+    v_center = Vertex(Vec3D(0, 0, 0))
+    vertices.append(v_center)
 
-    return vertices, [face]
+    angle_step = 2 * math.pi / segments
 
-def __create_polygon_disk(radius:float, segments:int, center:Vec3D, normal:Vec3D, up:Vec3D, surface_id:int) -> tuple[list[Vertex], list[Face]]:
-
-    disk_vertices:list[Vertex] = []
-    disk_faces:list[Face] = []
-
-    v_center = Vertex(center.copy())
-    disk_vertices.append(v_center)
-
-    norm = normal.normalize()
-    up_norm = up.normalize()
-    
-    right_norm = up_norm.cross(norm).normalize()
-    up_norm = norm.cross(right_norm).normalize()
-
-    circle_vertices:list[Vertex] = []
     for i in range(segments):
-        angle = (i / segments) * 2 * math.pi
-        local_x = math.cos(angle) * radius
-        local_y = math.sin(angle) * radius
-
-        pos = center + (right_norm * local_x) + (up_norm * local_y)
-        circle_vertices.append(Vertex(pos))
-
-    disk_vertices.extend(circle_vertices)
-    
+        angle = i * angle_step
+        x = radius * math.cos(angle)
+        y = radius * math.sin(angle)
+        vertices.append(Vertex(Vec3D(x, y, 0)))
+        
     for i in range(segments):
-        v_crr = circle_vertices[i]
-        v_next = circle_vertices[(i + 1) % segments]
+        v_crr_idx = i + 1
+        v_next_idx = ((i + 1) % segments) + 1
 
-        face = Face([v_center, v_crr, v_next], surface_id)
-        disk_faces.append(face)
+        v_crr = vertices[v_crr_idx]
+        v_next = vertices[v_next_idx]
 
-    return disk_vertices, disk_faces
+        faces.append(Face([v_center, v_crr, v_next], 0))
+
+    return vertices, faces
+
+def create_disk_object(name:str="Disk", radius:float=1, segments:int=16) -> Object3D:
+    vertices, faces = _create_disk_geometry(radius, segments)
+    edges = edge_extractor(vertices, faces)
+    mesh = Mesh(name, vertices, edges, faces)
+    obj = Object3D(name, mesh)
+
+    return obj
+

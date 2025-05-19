@@ -29,17 +29,21 @@ class Camera:
     is_proj_dirty:bool
     
     def __init__(
-            self, position:Vec3D, target:Vec3D, up:Vec3D|None=None,
+            self, name:str, position:Vec3D, target:Vec3D, up_hint:Vec3D,
             fov:float=60, aspect_ratio:float=1, near:float=0.1, far:float=100,
             projection_type:str="perspective", ortho_scale:float=5
     ) -> None:
+        if position.w != 1 or target.w != 1:
+            raise Exception("Poisition and Target must be point")
+        if up_hint.w != 0:
+            raise Exception("Up_hint must be vector")
+        
+        self.name = name
+        
         self.position = position
         self.target = target
-        if up is None:
-            self.up = Vec3D(0, 0, 1, 0)
-        else:
-            self.up = up
-
+        self.up = up_hint
+        
         self.fov = fov
         self.aspect_ratio = aspect_ratio
         self.near = near
@@ -56,14 +60,15 @@ class Camera:
     def apply_transform(self, transform: Mat3D) -> None:
         self.position = transform * self.position
         self.target = transform * self.target
-        self.up = transform *self.up
+        self.up = (transform * self.up).normalize()
         self.is_view_dirty = True
 
     def copy(self) -> Camera:
         new_camera = Camera(
+            self.name,
             position=self.position.copy(),
             target=self.target.copy(),
-            up=self.up.copy(),
+            up_hint=self.up.copy(),
             fov=self.fov,
             aspect_ratio=self.aspect_ratio,
             near=self.near,
@@ -117,14 +122,20 @@ class Camera:
         self.is_proj_dirty = True
 
     def set_position(self, position:Vec3D) -> None:
+        if position.w != 1:
+            raise Exception("Position must be point")
         self.position = position
         self.is_view_dirty = True
 
     def set_target(self, target:Vec3D) -> None:
+        if target.w != 1:
+            raise Exception("Target must be point")
         self.target = target
         self.is_view_dirty = True
 
     def set_up(self, up:Vec3D) -> None:
+        if up.w != 0:
+            raise Exception("Up must be vector")
         self.up = up
         self.is_view_dirty = True
         

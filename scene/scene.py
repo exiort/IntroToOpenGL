@@ -21,14 +21,14 @@ class Scene:
     default_camera_target:Vec3D
     default_camera_up:Vec3D
     
+    
     def __init__(self) -> None:
         self.root_collection = Collection("RootCollection")
 
-        self.default_camera_position = Vec3D(20, -25, 15)
+        self.default_camera_position = Vec3D(40, 0, 15)
         self.default_camera_target = Vec3D(0, 0, 0)
-        self.default_camera_up = Vec3D(0, 0, 1)
-
-        self.active_camera = Object3D("DefaultCam", Camera(self.default_camera_position, self.default_camera_target, self.default_camera_up))
+        self.default_camera_up = Vec3D(0, 0, 1, 0)
+        self.active_camera = Object3D("DefaultCam", Camera("Camera", self.default_camera_position, self.default_camera_target, self.default_camera_up))
         self.active_object = None
         
         grid_collection = Collection("WorldGrid")

@@ -122,10 +122,10 @@ class Mat3D:
         f = (center - eye).normalize()
         s = f.cross(up).normalize()
         u = s.cross(f)
-
-        tx = -s.dot(eye)
-        ty = -u.dot(eye)
-        tz = f.dot(eye)
+        
+        tx = -s.dot(eye.vectorize())
+        ty = -u.dot(eye.vectorize())
+        tz = f.dot(eye.vectorize())
         return Mat3D([
             [s.x, s.y, s.z, tx],
             [u.x, u.y, u.z, ty],
