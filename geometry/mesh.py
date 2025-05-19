@@ -56,6 +56,11 @@ class Mesh:
         new_base_vertices = list(vertex_map.values())
         new_base_edges = [e.copy(vertex_map) for e in self.base_edges]
         new_base_faces = [f.copy(vertex_map) for f in self.base_faces]
+
+        new_mesh.base_vertices = new_base_vertices
+        new_mesh.base_edges = new_base_edges
+        new_mesh.base_faces = new_base_faces
+        
         new_mesh.current_subdivision_level = self.current_subdivision_level
         new_mesh.subdivision_cache = {}
         new_mesh.subdivision_cache[0] = (new_base_vertices, new_base_edges, new_base_faces)
@@ -63,14 +68,11 @@ class Mesh:
 
         return new_mesh
     
-    def add_vertex(self, v:Vertex) -> None:
-        self.vertices.append(v)
-        #kullanma
-    def add_edge(self, e:Edge) -> None:
-        self.edges.append(e)
+    def add_vertex(self, v:Vertex) -> None:...
 
-    def add_face(self, f:Face) -> None:
-        self.faces.append(f)
+    def add_edge(self, e:Edge) -> None:...
+
+    def add_face(self, f:Face) -> None:...
 
     def apply_transform(self, matrix: Mat3D) -> None:
         for v in self.vertices:
@@ -82,7 +84,8 @@ class Mesh:
         self.subdivision_cache.clear()
         self.subdivision_cache[0] = (self.base_vertices, self.base_edges, self.base_faces)
         self.is_cache_dirty = True
-
+        #self.apply_subdivision()
+        
     def increase_subdivision_level(self) -> None:
         self.current_subdivision_level += 1
         
@@ -140,19 +143,20 @@ class Mesh:
             if edge_key not in edge_midpoint_map:
                  v1_copy = vertex_map[v1_orig]
                  v2_copy = vertex_map[v2_orig]
-                 mid_pos = (v1_copy.position + v2_copy.position) * 0.5
+                 mid_pos = Vec3D.middle_point(v1_copy.position, v2_copy.position)
                  mid_vertex = Vertex(mid_pos)
                  new_vertices.append(mid_vertex)
                  edge_midpoint_map[edge_key] = mid_vertex
 
         for face_orig in faces:
-            center_pos_sum = Vec3D(0, 0, 0)
+            center_pos_sum = Vec3D(0, 0, 0, 0)
             num_face_verts = len(face_orig.vertices)
             if num_face_verts > 0:
                 for v_orig in face_orig.vertices:
                     v_copy = vertex_map[v_orig]
-                    center_pos_sum += v_copy.position
-                center_pos = center_pos_sum * (1.0 / num_face_verts)
+                    center_pos_sum += v_copy.position.vectorize()
+                center_pos_sum = center_pos_sum * (1.0 / num_face_verts)
+                center_pos = center_pos_sum.pointize()
             else:
                 center_pos = Vec3D(0,0,0)
             center_vertex = Vertex(center_pos)

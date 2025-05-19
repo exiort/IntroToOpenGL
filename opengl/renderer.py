@@ -22,8 +22,7 @@ class Renderer:
         data.apply_transform(m2w_matrix)
 
     @staticmethod
-    def convert_to_ndc_camera(data:Camera) -> None:
-        pass
+    def convert_to_ndc_camera(data:Camera) -> None:...
 
     @staticmethod
     def convert_to_ndc_mesh(data:Mesh) -> None:

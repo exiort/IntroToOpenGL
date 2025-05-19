@@ -12,6 +12,8 @@ class Vertex:
     position: Vec3D
 
     def __init__(self, position:Vec3D) -> None:
+        if position.w != 1:
+            raise Exception("Position must be point")
         self.position = position
 
     def __repr__(self) -> str:
@@ -20,6 +22,6 @@ class Vertex:
     def copy(self) -> Vertex:
         return Vertex(self.position.copy())
         
-    def transform(self, matrix:Mat3D):
+    def transform(self, matrix:Mat3D) -> None:
         self.position = matrix * self.position
 

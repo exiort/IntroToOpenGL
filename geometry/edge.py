@@ -27,5 +27,7 @@ class Edge:
         return (self.v1.position - self.v2.position).magnitude()
 
     def midpoint(self) -> Vec3D:
-        return (self.v1.position + self.v2.position) * 0.5
-
+        return Vec3D.middle_point(self.v1.position, self.v2.position)
+        
+       
+    

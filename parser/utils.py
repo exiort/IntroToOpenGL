@@ -13,9 +13,9 @@ def reorient_object(obj:Object3D, source_up:Vec3D, source_fwd:Vec3D) -> None:
     s_fwd = source_fwd.normalize()
     s_right = s_fwd.cross(s_up).normalize()
 
-    t_up = Vec3D(0, 0, 1)
-    t_fwd = Vec3D(0, 1, 0)
-    t_right = Vec3D(1, 0, 0)
+    t_up = Vec3D(0, 0, 1, 0)
+    t_fwd = Vec3D(0, 1, 0, 0)
+    t_right = Vec3D(1, 0, 0, 0)
 
     M_source_inv = Mat3D([
         [s_right.x, s_up.x, s_fwd.x, 0],

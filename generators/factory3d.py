@@ -1,5 +1,5 @@
 from math3d import Vec3D
-from geometry import Vertex, Face, Mesh, edge_extractor, vertex
+from geometry import Vertex, Face, Mesh, edge_extractor
 from object3d import Object3D
 import math
 

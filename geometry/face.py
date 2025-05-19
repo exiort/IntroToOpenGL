@@ -25,8 +25,8 @@ class Face:
         return Face(new_vertices, self.surface_id)
     
     def center(self) -> Vec3D:
-        total = Vec3D()
+        total = Vec3D(0, 0, 0, 0)
         for v in self.vertices:
-            total += v.position
-        return total * (1 / len(self.vertices))
-    
+            total += v.position.vectorize()
+        total = total * (1 / len(self.vertices))
+        return total.pointize()

@@ -4,7 +4,6 @@ from geometry import Mesh, Edge, Vertex
 
 
 
-
 def create_line(start:Vec3D, end:Vec3D) -> Object3D:
     v0 = Vertex(start)
     v1 = Vertex(end)
