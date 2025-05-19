@@ -7,7 +7,8 @@ from __future__ import annotations
 from .vertex import Vertex
 from .edge import Edge
 from .face import Face
-from math3d import Mat3D, Vec3D
+from .mesh_algoritms import MeshAlgorithms
+from math3d import Mat3D
 
 
 
@@ -106,7 +107,7 @@ class Mesh:
                 last_subdivision = len(self.subdivision_cache) - 1
                 for _ in range(self.current_subdivision_level - last_subdivision):
                     last_vertices, last_edges, last_faces = self.subdivision_cache[last_subdivision]
-                    new_vertices, new_edges, new_faces = Mesh.calculate_subdivision(last_vertices, last_edges, last_faces)
+                    new_vertices, new_edges, new_faces = MeshAlgorithms.calculate_catmull_clark(last_vertices, last_edges, last_faces)
                     last_subdivision += 1
                     self.subdivision_cache[last_subdivision] = (new_vertices, new_edges, new_faces)
 
@@ -116,102 +117,8 @@ class Mesh:
         
             for i in range(self.current_subdivision_level):
                 last_vertices, last_edges, last_faces = self.subdivision_cache[i]
-                new_vertices, new_edges, new_faces = Mesh.calculate_subdivision(last_vertices, last_edges, last_faces)
+                new_vertices, new_edges, new_faces = MeshAlgorithms.calculate_catmull_clark(last_vertices, last_edges, last_faces)
                 self.subdivision_cache[i + 1] = (new_vertices, new_edges, new_faces)
 
         self.is_cache_dirty = False
         self.vertices, self.edges, self.faces = self.subdivision_cache[self.current_subdivision_level]
-
-    @staticmethod
-    def split_geometry(vertices:list[Vertex], edges:list[Edge], faces:list[Face]) -> tuple[list[Vertex], list[Edge], list[Face]]:
-        new_vertices:list[Vertex] = []
-        new_edges_set:set[tuple[int, ...]] = set()
-        new_faces:list[Face] = []
-
-        vertex_map:dict[Vertex, Vertex] = {}
-        edge_midpoint_map:dict[tuple[int, ...], Vertex] = {}
-        face_centroid_map:dict[Face, Vertex] = {}
-
-        for v_orig in vertices:
-            v_copy = v_orig.copy()
-            new_vertices.append(v_copy)
-            vertex_map[v_orig] = v_copy
-        
-        for edge in edges:
-            v1_orig, v2_orig = edge.v1, edge.v2
-            edge_key = tuple(sorted((id(v1_orig), id(v2_orig))))
-            if edge_key not in edge_midpoint_map:
-                 v1_copy = vertex_map[v1_orig]
-                 v2_copy = vertex_map[v2_orig]
-                 mid_pos = Vec3D.middle_point(v1_copy.position, v2_copy.position)
-                 mid_vertex = Vertex(mid_pos)
-                 new_vertices.append(mid_vertex)
-                 edge_midpoint_map[edge_key] = mid_vertex
-
-        for face_orig in faces:
-            center_pos_sum = Vec3D(0, 0, 0, 0)
-            num_face_verts = len(face_orig.vertices)
-            if num_face_verts > 0:
-                for v_orig in face_orig.vertices:
-                    v_copy = vertex_map[v_orig]
-                    center_pos_sum += v_copy.position.vectorize()
-                center_pos_sum = center_pos_sum * (1.0 / num_face_verts)
-                center_pos = center_pos_sum.pointize()
-            else:
-                center_pos = Vec3D(0,0,0)
-            center_vertex = Vertex(center_pos)
-            new_vertices.append(center_vertex)
-            face_centroid_map[face_orig] = center_vertex         
-                 
-        for face_orig in faces:
-            orig_verts = face_orig.vertices
-            num_orig_verts = len(orig_verts)
-            sid = face_orig.surface_id
-            copied_orig_verts = [vertex_map[v] for v in orig_verts]
-            center_vert = face_centroid_map[face_orig]
-
-            if num_orig_verts == 4:
-                v0, v1, v2, v3 = copied_orig_verts
-                m01 = edge_midpoint_map[tuple(sorted((id(orig_verts[0]), id(orig_verts[1]))))]
-                m12 = edge_midpoint_map[tuple(sorted((id(orig_verts[1]), id(orig_verts[2]))))]
-                m23 = edge_midpoint_map[tuple(sorted((id(orig_verts[2]), id(orig_verts[3]))))]
-                m30 = edge_midpoint_map[tuple(sorted((id(orig_verts[3]), id(orig_verts[0]))))]
-                f1 = Face([v0, m01, center_vert, m30], sid)
-                f2 = Face([v1, m12, center_vert, m01], sid)
-                f3 = Face([v2, m23, center_vert, m12], sid)
-                f4 = Face([v3, m30, center_vert, m23], sid)
-                new_faces.extend([f1, f2, f3, f4])
-                edges_to_add = [(v0, m01), (m01, center_vert), (center_vert, m30), (m30, v0), (v1, m12), (m12, center_vert), (center_vert, m01), (m01, v1), (v2, m23), (m23, center_vert), (center_vert, m12), (m12, v2), (v3, m30), (m30, center_vert), (center_vert, m23), (m23, v3)]
-                for v_a, v_b in edges_to_add: new_edges_set.add(tuple(sorted((id(v_a), id(v_b)))))
-
-            elif num_orig_verts == 3:
-                v0, v1, v2 = copied_orig_verts
-                m01 = edge_midpoint_map[tuple(sorted((id(orig_verts[0]), id(orig_verts[1]))))]
-                m12 = edge_midpoint_map[tuple(sorted((id(orig_verts[1]), id(orig_verts[2]))))]
-                m20 = edge_midpoint_map[tuple(sorted((id(orig_verts[2]), id(orig_verts[0]))))]
-                f1 = Face([v0, m01, m20], sid)
-                f2 = Face([v1, m12, m01], sid)
-                f3 = Face([v2, m20, m12], sid)
-                f4 = Face([m01, m12, m20], sid)
-                new_faces.extend([f1, f2, f3, f4])
-                edges_to_add = [(v0, m01), (m01, m20), (m20, v0), (v1, m12), (m12, m01), (m01, v1), (v2, m20), (m20, m12), (m12, v2), (m01, m12), (m12, m20), (m20, m01)]
-                for v_a, v_b in edges_to_add: new_edges_set.add(tuple(sorted((id(v_a), id(v_b)))))
-
-        vertex_id_map = {id(v): v for v in new_vertices}
-        new_edges = []
-        for id1, id2 in new_edges_set:
-            if id1 in vertex_id_map and id2 in vertex_id_map:
-                new_edges.append(Edge(vertex_id_map[id1], vertex_id_map[id2]))
-
-        return new_vertices, new_edges, new_faces      
-
-
-    @staticmethod
-    def smooth_vertices(vertices:list[Vertex], edges:list[Edge], faces:list[Face]) -> list[Vertex]:...
-
-    @staticmethod
-    def calculate_subdivision(vertices:list[Vertex], edges:list[Edge], faces:list[Face]) -> tuple[list[Vertex], list[Edge], list[Face]]:
-        new_vertices, new_edges, new_faces = Mesh.split_geometry(vertices, edges, faces)
-
-        return new_vertices, new_edges, new_faces
-    
