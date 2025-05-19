@@ -180,7 +180,7 @@ class MeshAlgorithms:
             connected_edges = vertex_adj_edges.get(v_orig, [])
             
             n_faces = float(len(connected_faces))
-            p_orig_pos_point = v_orig.position # Bu bir nokta
+            p_orig_pos_point = v_orig.position 
 
             if n_faces < 1e-6: 
                 mop_pos_point = p_orig_pos_point.copy()
