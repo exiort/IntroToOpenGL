@@ -4,7 +4,7 @@
 # April 2025
 
 from OpenGL.GL import (
-    GL_LINE_LOOP, GL_QUADS, glBegin, glClear, glClearColor, glClearDepth, glColor3f, glColor4f, glDepthFunc,
+    GL_LINE_LOOP, GL_QUADS, glBegin, glClear, glClearColor, glClearDepth, glColor4f, glDepthFunc,
     glDisable, glEnable, glEnd, glLineWidth, glLoadIdentity, glMatrixMode, glPopMatrix,
     glPushMatrix, glRasterPos2f, glShadeModel, glVertex2f, glViewport,
     GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT, GL_DEPTH_TEST, GL_LESS,
@@ -19,7 +19,7 @@ from OpenGL.GLUT import (
     glutBitmapCharacter,
     glutCreateWindow, glutDisplayFunc, glutFullScreen, glutGet, glutIdleFunc,
     glutInit, glutInitDisplayMode, glutInitWindowSize,
-    glutKeyboardFunc, glutKeyboardUpFunc,
+    glutKeyboardFunc, 
     glutLeaveMainLoop, glutMainLoop, glutMotionFunc, glutMouseFunc,
     glutMouseWheelFunc, glutPostRedisplay, glutReshapeFunc,
     glutSpecialFunc, glutSpecialUpFunc, glutSwapBuffers
@@ -197,7 +197,6 @@ class GLContext:
         glLineWidth(1.0)
         
     def __glut_keyboard_handler(self, key:bytes, x:int, y:int) -> None:
-        print(key)
         key = key.lower()
 
         if key == b'q':

@@ -1,3 +1,7 @@
+# CENG 487 Assignment4 by
+# Bugrahan Imal
+# StudentId: 280201012
+# May 2025
 class UIManager:
     help_pages_content:list[dict[str, str|list[str]]] = [
         {

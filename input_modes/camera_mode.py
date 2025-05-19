@@ -1,4 +1,7 @@
-from math3d.vec3d import Vec3D
+# CENG 487 Assignment4 by
+# Bugrahan Imal
+# StudentId: 280201012
+# May 2025
 from .base_mode import BaseMode
 from camera import Camera
 from math3d import Mat3D

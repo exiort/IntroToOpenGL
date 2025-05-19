@@ -1,6 +1,13 @@
-from object3d import Object3D
+# CENG 487 Assignment4 by
+# Bugrahan Imal
+# StudentId: 280201012
+# May 2025
 from .base_mode import BaseMode
+from object3d import Object3D
 from generators import create_box_object, create_cylinder_object, create_pyramid_object, create_sphere_object, create_torus_object, create_tetrahedron_object
+from parser import parse_file
+from math3d import Vec3D
+
 
 
 class SceneMode:
@@ -50,15 +57,15 @@ class SceneMode:
 
         obj = Object3D()
         if obj_id == b'1':
-            obj = create_box_object("Box", 5, 5, 5)
+            obj = create_box_object("Box", 10, 10, 10)
         elif obj_id == b'\x00':
-            obj = create_cylinder_object("Cylinder", 2.5, 10, 32)
+            obj = create_cylinder_object("Cylinder", 5, 10, 32)
         elif obj_id == b'\x1b':
-            obj = create_pyramid_object("Pyramid", 5, 5, 10)
+            obj = create_pyramid_object("Pyramid", 10, 10, 15)
         elif obj_id == b'\x1c':
-            obj = create_sphere_object("Sphere", 2.5, 32, 16)
+            obj = create_sphere_object("Sphere", 5, 32, 16)
         elif obj_id == b'\x1d':
-            obj = create_torus_object("Torus", 5, 1.25, 32, 16)
+            obj = create_torus_object("Torus", 5, 2.5, 32, 16)
         elif obj_id == b'\x1e':
             obj = create_tetrahedron_object("Tetrahedron", 5)
             
@@ -75,7 +82,19 @@ class SceneMode:
         self.base_mode.scene.remove_object(active_obj)
         return True
         
-    def __load_object(self) -> bool:...
+    def __load_object(self) -> bool:
+        active_obj = self.base_mode.scene.get_active_object()
+        if active_obj is not None:
+            return False
+
+        filepath = input("Please Provide path of .obj file:")
+        obj = parse_file(filepath, Vec3D(0, 1, 0, 0), Vec3D(0, 0, -1, 0))
+        if obj is None:
+            return False
+
+        self.base_mode.scene.add_object(obj)
+        self.base_mode.scene.set_active_object(obj)
+        return True
 
     def __toggle_grid(self) -> bool:
         self.base_mode.scene.change_grid_visibility()

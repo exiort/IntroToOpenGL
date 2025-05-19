@@ -20,31 +20,24 @@ class InputHandler:
         self.active_mode = 0
 
     def handle_key_press(self, key:bytes) -> bool:
-        print(f"key presss: key_char={key}")
         if key.lower() == b'm':
             self.active_mode = (self.active_mode + 1) % len(self.modes)
-            print(f"activemode:{self.active_mode}")
             return False
         
         return self.modes[self.active_mode].handle_key_press(key)
 
     def handle_special_key_press(self, key:int) -> bool:
-        print(f"special press: key={key}")
         return self.modes[self.active_mode].handle_special_key_press(key)
 
     def handle_special_key_release(self, key:int) -> None:
-        print(f"special release: key={key}")
         self.modes[self.active_mode].handle_special_key_release(key)
 
     def handle_mouse_wheel(self, direction:int) -> bool:
-        print(f"wheel: direction={direction}")
         return self.modes[self.active_mode].handle_mouse_wheel(direction)
 
     def handle_mouse_button(self, button:int, is_pressed:bool, x:int, y:int) -> bool:
-        print(f"button: button={button}, is_pressed={is_pressed}, x={x}, y={y}")
         return self.modes[self.active_mode].handle_mouse_button(button, is_pressed, x, y)
 
     def handle_mouse_drag(self, x:int, y:int) -> bool:
-        print(f"drag:x={x}, y={y}")
         return self.modes[self.active_mode].handle_mouse_drag(x, y)
     

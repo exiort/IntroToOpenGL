@@ -1,3 +1,7 @@
+# CENG 487 Assignment4 by
+# Bugrahan Imal
+# StudentId: 280201012
+# May 2025
 from math3d import Vec3D
 from object3d import Object3D
 from geometry import Mesh, Edge, Vertex

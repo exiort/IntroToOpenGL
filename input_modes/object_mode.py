@@ -1,3 +1,7 @@
+# CENG 487 Assignment4 by
+# Bugrahan Imal
+# StudentId: 280201012
+# May 2025
 from geometry.mesh import Mesh
 from .base_mode import BaseMode
 from math3d import Mat3D
