@@ -34,7 +34,8 @@ class UIManager:
                 "'-': Decrease Subdivision Level of Active Mesh",
                 "Ctrl + LMB/RMB/MMB Drag: Translate Active Object (X/Y/Z)",
                 "Alt + LMB/RMB/MMB Drag: Rotate Active Object (X/Y/Z)",
-                "SHIFT + LMB/RMB/MMB Drag: Scale Active Object (X/Y/Z)" 
+                "SHIFT + LMB/RMB/MMB Drag: Scale Active Object (X/Y/Z)",
+                "X: Cycle through objects in the scene"
             ]
         },
         {
@@ -48,7 +49,8 @@ class UIManager:
                 "Ctrl + 6: Add Predefined Tetrahedron Object (if no object is active)",
                 "Ctrl + O: Load an .obj file (if no object is active)",
                 "Delete: Delete Active Object (if an object is active)",
-                "Ctrl + 0: Toggle Grid Visibility"
+                "Ctrl + 0: Toggle Grid Visibility",
+                "X: Cycle through objects in the scene"
             ]
         }
     ]
@@ -64,7 +66,8 @@ class UIManager:
     osd_active_mode_name:str
     osd_active_object_name:str
     osd_active_object_subdivision:str
-
+    osd_object_count:str
+    
     osd_text_color:tuple[float, float, float, float]
     osd_title_color:tuple[float, float, float, float]
     osd_box_bg_color:tuple[float, float, float, float]
@@ -86,6 +89,7 @@ class UIManager:
         self.osd_active_mode_name = "CAMERA MODE"
         self.osd_active_object_name = "None"
         self.osd_active_object_subdivision = "N/A"
+        self.osd_object_count = "N/A" 
         
         self.osd_text_color = (0.9, 0.9, 0.9, 1)
         self.osd_title_color = (1, 0.85, 0, 1)
@@ -110,18 +114,22 @@ class UIManager:
 
         return True    
 
-    def update_osd_data(self, active_mode_name:str|None=None, active_object_name:str|None=None, active_object_subdivision:str|None=None) -> bool:
+    def update_osd_data(self, active_mode_name:str|None=None, active_object_name:str|None=None, active_object_subdivision:str|None=None, object_count:str|None=None) -> bool:
         redraw_needed = False
-        if active_mode_name is not None:
+        if active_mode_name is not None and active_mode_name != self.osd_active_mode_name:
             self.osd_active_mode_name = active_mode_name
             redraw_needed = True
 
-        if active_object_name is not None:
+        if active_object_name is not None and active_object_name != self.osd_active_object_name:
             self.osd_active_object_name = active_object_name
             redraw_needed = True
             
-        if active_object_subdivision is not None:
+        if active_object_subdivision is not None and active_object_subdivision != self.osd_active_object_subdivision:
             self.osd_active_object_subdivision = active_object_subdivision
+            redraw_needed = True
+
+        if object_count is not None and object_count != self.osd_object_count:
+            self.osd_object_count = object_count
             redraw_needed = True
             
         return redraw_needed
@@ -142,6 +150,7 @@ class UIManager:
         osd_lines = [
             f"Active Mode: {self.osd_active_mode_name}",
             f"Active Object: {self.osd_active_object_name}",
+            f"Object Count: {self.osd_object_count}",
             f"Subdivision Level: {self.osd_active_object_subdivision}",
             f"Help: h"
         ]

@@ -32,7 +32,9 @@ class SceneMode:
             return self.__toggle_grid()
         elif key == b'\x7f':
             return self.__remove_object()
-
+        elif key == b'x':
+            return self.__loop_active_object()  
+        
         return self.base_mode.handle_key_press(key)
     
     def handle_special_key_press(self, key:int) -> bool:
@@ -51,24 +53,21 @@ class SceneMode:
         return False
 
     def __add_object(self, obj_id:bytes) -> bool:
-        active_obj = self.base_mode.scene.get_active_object()
-        if active_obj is not None:
-            return False
-
-        obj = Object3D()
+        shader = self.base_mode.scene.shader
+        obj = Object3D(shader)
         if obj_id == b'1':
-            obj = create_box_object("Box", 10, 10, 10)
+            obj = create_box_object(shader, "Box", 10, 10, 10)
         elif obj_id == b'\x00':
-            obj = create_cylinder_object("Cylinder", 5, 10, 32)
+            obj = create_cylinder_object(shader, "Cylinder", 5, 10, 32)
         elif obj_id == b'\x1b':
-            obj = create_pyramid_object("Pyramid", 10, 10, 15)
+            obj = create_pyramid_object(shader, "Pyramid", 10, 10, 15)
         elif obj_id == b'\x1c':
-            obj = create_sphere_object("Sphere", 5, 32, 16)
+            obj = create_sphere_object(shader, "Sphere", 5, 32, 16)
         elif obj_id == b'\x1d':
-            obj = create_torus_object("Torus", 5, 2.5, 32, 16)
+            obj = create_torus_object(shader, "Torus", 5, 2.5, 32, 16)
         elif obj_id == b'\x1e':
-            obj = create_tetrahedron_object("Tetrahedron", 5)
-            
+            obj = create_tetrahedron_object(shader, "Tetrahedron", 5)
+  
         self.base_mode.scene.add_object(obj)
         self.base_mode.scene.set_active_object(obj)
         return True
@@ -78,10 +77,10 @@ class SceneMode:
         if active_obj is None:
             return False
         
-        self.base_mode.scene.set_active_object(None)
         self.base_mode.scene.remove_object(active_obj)
+        self.base_mode.scene.set_active_object(self.base_mode.scene.get_latest_object())
         return True
-        
+    
     def __load_object(self) -> bool:
         active_obj = self.base_mode.scene.get_active_object()
         if active_obj is not None:
@@ -98,4 +97,15 @@ class SceneMode:
 
     def __toggle_grid(self) -> bool:
         self.base_mode.scene.change_grid_visibility()
+        return True
+    
+    def __loop_active_object(self) -> bool:
+        active_obj = self.base_mode.scene.get_active_object()
+        if active_obj is None:
+            return False
+
+        obj = self.base_mode.scene.get_next_object(active_obj)
+        if obj is None:
+            return False
+        self.base_mode.scene.set_active_object(obj)
         return True

@@ -57,11 +57,11 @@ class Camera:
         self.is_view_dirty = True 
         self.is_proj_dirty = True
 
-    def apply_transform(self, transform: Mat3D) -> None:
-        self.position = transform * self.position
-        self.target = transform * self.target
-        self.up = (transform * self.up).normalize()
-        self.is_view_dirty = True
+#    def apply_transform(self, transform: Mat3D) -> None:
+#        self.position = transform * self.position
+#        self.target = transform * self.target
+#        self.up = (transform * self.up).normalize()
+#        self.is_view_dirty = True
 
     def copy(self) -> Camera:
         new_camera = Camera(

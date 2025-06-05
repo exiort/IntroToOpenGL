@@ -20,6 +20,8 @@ class ObjectMode:
             return self.__handle_subdivision(True)
         elif key == b'-':
             return self.__handle_subdivision(False)
+        elif key == b'x':
+            return self.__loop_active_object()
         
         return self.base_mode.handle_key_press(key)
     
@@ -156,4 +158,14 @@ class ObjectMode:
             
         mesh.apply_subdivision()
         return True
-        
+
+    def __loop_active_object(self) -> bool:
+        active_obj = self.base_mode.scene.get_active_object()
+        if active_obj is None:
+            return False
+
+        obj = self.base_mode.scene.get_next_object(active_obj)
+        if obj is None:
+            return False
+        self.base_mode.scene.set_active_object(obj)
+        return True

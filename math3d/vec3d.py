@@ -20,6 +20,14 @@ class Vec3D:
         self.z = z
         self.w = w
 
+    def __eq__(self, value: object, /) -> bool:
+        if not isinstance(value, Vec3D):
+            return NotImplemented
+        return self.x == value.x and self.y == value.y and self.z == value.z and self.w == value.w 
+
+    def __hash__(self) -> int:
+        return hash((self.x, self.y, self.z, self.w))
+
     def __add__(self, other:Vec3D) -> Vec3D:
         if self.w == 1 and other.w == 1:
             raise Exception("Point+Point invalid")

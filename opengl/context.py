@@ -4,7 +4,7 @@
 # April 2025
 
 from OpenGL.GL import (
-    GL_LINE_LOOP, GL_QUADS, glBegin, glClear, glClearColor, glClearDepth, glColor4f, glDepthFunc,
+    GL_FRAGMENT_SHADER, GL_LINE_LOOP, GL_QUADS, GL_VERTEX_SHADER, glBegin, glClear, glClearColor, glClearDepth, glColor4f, glDepthFunc,
     glDisable, glEnable, glEnd, glLineWidth, glLoadIdentity, glMatrixMode, glPopMatrix,
     glPushMatrix, glRasterPos2f, glShadeModel, glVertex2f, glViewport,
     GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT, GL_DEPTH_TEST, GL_LESS,
@@ -34,10 +34,11 @@ GLUT_DEPTH:int
 GL_COLOR_BUFFER_BIT:int
 GL_DEPTH_BUFFER_BIT:int
 
+from shaders import Shader
 from geometry.mesh import Mesh
 from scene import Scene
 from ui import UIManager
-from .renderer import Renderer
+from renderer import Renderer
 from .timer import Timer
 from .input_handler import InputHandler
 
@@ -54,15 +55,12 @@ class GLContext:
     input_handler:InputHandler
     ui_manager:UIManager
     
-    def __init__(self, scene:Scene, title:str="3D", width:int=640, height:int=480, FPS:int=30) -> None:
-        self.scene = scene
+    def __init__(self, title:str="3D", width:int=640, height:int=480, FPS:int=30) -> None:
+       
         self.title = title
         self.width = width
         self.height = height
         self.timer = Timer(FPS)
-
-        self.input_handler = InputHandler(self.scene)
-        self.ui_manager = UIManager()
 
     def run(self) -> None:
         glutInit()
@@ -81,6 +79,13 @@ class GLContext:
         glutCreateWindow(self.title.encode())
         glutFullScreen()
         self.init_gl()
+        shader = Shader([
+            ("shaders/glsl_shaders/basic.vert", GL_VERTEX_SHADER),
+            ("shaders/glsl_shaders/basic.frag", GL_FRAGMENT_SHADER)
+        ])
+        self.scene = Scene(shader)
+        self.input_handler = InputHandler(self.scene)
+        self.ui_manager = UIManager()
         
         glutDisplayFunc(self.display)
         glutIdleFunc(self.display)
@@ -105,12 +110,12 @@ class GLContext:
             return
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         Renderer.render_scene(self.scene)
-
+       
         
         glMatrixMode(GL_PROJECTION)
         glPushMatrix()
         glLoadIdentity()
-        gluOrtho2D(0.0, self.width, 0.0, self.height) # (0,0) sol alt
+        gluOrtho2D(0.0, self.width, 0.0, self.height)
         glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
         glLoadIdentity()
@@ -119,19 +124,21 @@ class GLContext:
         active_obj = self.scene.get_active_object()
         obj_name = active_obj.name if active_obj else "None"
         subdiv_str = str(active_obj.data.current_subdivision_level) if active_obj and isinstance(active_obj.data, Mesh) else "N/A"
-        self.ui_manager.update_osd_data(active_mode_name, obj_name, subdiv_str)
+        object_count_str = str(self.scene.get_object_count())
+        
+        self.ui_manager.update_osd_data(active_mode_name, obj_name, subdiv_str, object_count_str)
         draw_commands = self.ui_manager.get_draw_commands()
 
         text_commands = [cmd for cmd in draw_commands if cmd[0] == "TEXT"]
         rect_commands = [cmd for cmd in draw_commands if cmd[0] == "RECT"]
 
-        for cmd_type, *args in rect_commands:
+        for _, *args in rect_commands:
             self.__draw_ui_rect(*args)
 
-        for cmd_type, *args in text_commands:
+        for _, *args in text_commands:
             self.__draw_ui_text(*args)
 
-        glEnable(GL_DEPTH_TEST) # Derinlik testini geri etkinleştir
+        glEnable(GL_DEPTH_TEST)
         glMatrixMode(GL_PROJECTION)
         glPopMatrix()
         glMatrixMode(GL_MODELVIEW)
@@ -198,7 +205,6 @@ class GLContext:
         
     def __glut_keyboard_handler(self, key:bytes, x:int, y:int) -> None:
         key = key.lower()
-
         if key == b'q':
             glutLeaveMainLoop()
             return
