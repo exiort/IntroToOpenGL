@@ -5,5 +5,7 @@
 
 from .mat3d import Mat3D
 from .vec3d import Vec3D
+from .vec2d import Vec2D
+from .vec4d import Vec4D
 
-__all__ = ["Mat3D", "Vec3D"]
+__all__ = ["Mat3D", "Vec3D", "Vec2D", "Vec4D"]

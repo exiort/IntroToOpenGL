@@ -41,7 +41,7 @@ class BaseMode:
             if self.shift_key_pressed:
                 return self.__redo()
             return self.__undo()
-
+        
         return False
         
     def handle_special_key_press(self, key:int) -> bool:
@@ -76,3 +76,4 @@ class BaseMode:
 
         active_object.redo_transform()
         return True
+    

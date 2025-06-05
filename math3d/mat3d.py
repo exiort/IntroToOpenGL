@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 import math
+import numpy as np
 from .vec3d import Vec3D
 
 
@@ -17,6 +18,27 @@ class Mat3D:
         else:
             self.matrix = [[0, 0, 0, 0] for _ in range(4)]
 
+    def __eq__(self, value: object, /) -> bool:
+        if not isinstance(value, Mat3D):
+            return NotImplemented
+
+        if len(self.matrix) != 4 or len(value.matrix) != 4:
+            return False 
+        for i in range(4):
+            if len(self.matrix[i]) != 4 or len(value.matrix[i]) != 4:
+                return False
+            for j in range(4):
+                if self.matrix[i][j] != value.matrix[i][j]:
+                    return False
+        return True     
+
+    def __hash__(self) -> int:
+        elements = []
+        for i in range(len(self.matrix)):
+            for j in range(len(self.matrix[i])):
+                elements.append(self.matrix[i][j])
+        return hash(tuple(elements))
+        
     def __mul__(self, other:Vec3D) -> Vec3D:
         res = [0.0, 0.0, 0.0, 0.0]
         v = other.flatten()
@@ -193,3 +215,7 @@ class Mat3D:
             [r20, r21, r22, 0],
             [0, 0, 0, 1]
         ])
+
+    @staticmethod
+    def convert_to_numpy(mat:Mat3D) -> np.ndarray:
+        return np.array(mat.matrix, dtype=np.float32).flatten()

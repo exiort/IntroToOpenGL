@@ -7,6 +7,7 @@ from camera import Camera
 from generators import create_grid_lines
 from math3d import Vec3D
 from object3d import Object3D
+from shaders import Shader
 from .collection import Collection
 
 
@@ -20,19 +21,22 @@ class Scene:
     default_camera_position:Vec3D
     default_camera_target:Vec3D
     default_camera_up:Vec3D
+
+    shader:Shader
     
-    
-    def __init__(self) -> None:
+    def __init__(self, shader:Shader) -> None:
+        self.shader = shader
+        
         self.root_collection = Collection("RootCollection")
 
-        self.default_camera_position = Vec3D(40, 0, 15)
+        self.default_camera_position = Vec3D(0, 40, 15)
         self.default_camera_target = Vec3D(0, 0, 0)
         self.default_camera_up = Vec3D(0, 0, 1, 0)
-        self.active_camera = Object3D("DefaultCam", Camera("Camera", self.default_camera_position, self.default_camera_target, self.default_camera_up))
+        self.active_camera = Object3D(shader, "DefaultCam", Camera("Camera", self.default_camera_position, self.default_camera_target, self.default_camera_up))
         self.active_object = None
         
         grid_collection = Collection("WorldGrid")
-        for obj in create_grid_lines(count=51):
+        for obj in create_grid_lines(shader, count=71):
             grid_collection.add_object(obj, is_visible=True)
         self.root_collection.add_child(grid_collection)
             
@@ -68,3 +72,20 @@ class Scene:
             if collection.name == "WorldGrid":
                 collection.set_collection_visibility(not collection.is_visible)
 
+    def get_latest_object(self) -> Object3D|None:
+        objects = self.root_collection.objects
+        if len(objects) == 0:
+            return None
+        return next(iter(objects))
+        
+    def get_next_object(self, obj:Object3D) -> Object3D|None:
+        objs = list(self.root_collection.objects)
+        size = len(objs)
+        if size == 0:
+            return None
+        crr_idx = objs.index(obj)
+        return objs[(crr_idx + 1) % size]
+
+    def get_object_count(self) -> int:
+        return len(self.root_collection.objects)
+    

@@ -7,7 +7,8 @@ from __future__ import annotations
 from camera import Camera
 from math3d import Mat3D
 from geometry import Mesh
-
+from renderer import RenderableMesh
+from shaders import Shader
 
 
 class Object3D:
@@ -17,9 +18,12 @@ class Object3D:
     temporary_stack:list[Mat3D]
     crr_transform:Mat3D
     is_transform_changed:bool
+
     data:Mesh|Camera
+    renderable_data:RenderableMesh|None
+    shader:Shader
     
-    def __init__(self, name="Default", data:Mesh|Camera|None=None) -> None:
+    def __init__(self, shader:Shader, name="Default", data:Mesh|Camera|None=None) -> None:
         self.name = name
         self.do_stack = []
         self.redo_stack = []
@@ -30,12 +34,16 @@ class Object3D:
             self.data = Mesh()
         else:
             self.data = data
-            
+
+        self.renderable_data = None
+        self.shader = shader
+        self.___update_renderable_data()
+        
     def __repr__(self) -> str:
         return f"Object3D(name={self.name}, transform_count={len(self.do_stack)})"
 
     def copy(self) -> Object3D:
-        new_obj = Object3D(f"{self.name}_Copy", self.data.copy())
+        new_obj = Object3D(self.shader, f"{self.name}_Copy", self.data.copy())
         new_obj.do_stack = self.do_stack.copy()
         new_obj.redo_stack = self.redo_stack.copy()
         new_obj.crr_transform = self.crr_transform.copy()
@@ -90,18 +98,47 @@ class Object3D:
         self.crr_transform = res
         self.is_transform_changed = False
 
-    def apply_transform(self) -> None:
-        if self.is_transform_changed:
-            self.compute_transformation()
-        self.data.apply_transform(self.crr_transform)
-        self.do_stack.clear()
-        self.redo_stack.clear()
-        self.temporary_stack.clear()
-        self.crr_transform = Mat3D.identity()
-        self.is_transform_changed = False
+#    def apply_transform(self) -> None:
+#       if self.is_transform_changed:
+#            self.compute_transformation()
+#        self.data.apply_transform(self.crr_transform)
+#        self.do_stack.clear()
+#        self.redo_stack.clear()
+#        self.temporary_stack.clear()
+#        self.crr_transform = Mat3D.identity()
+#        self.is_transform_changed = False
 
     def get_m2w_matrix(self) -> Mat3D:
         if self.is_transform_changed:
             self.compute_transformation()
         return self.crr_transform
 
+    def sync_gpu_representation(self) -> None:
+        if isinstance(self.data, Mesh):
+            if self.renderable_data is None:
+                self.___update_renderable_data()
+            elif self.data.is_render_data_dirty:
+                mode, positions, normals, uvs, colors, count = self.data.get_render_arrays()
+                self.renderable_data.update_buffers(mode, positions, normals, uvs, colors, count)
+                self.data.is_render_data_dirty = False
+               
+        elif self.renderable_data is not None:
+            self.renderable_data.release_buffers()
+            self.renderable_data = None           
+
+    def release_resources(self) -> None:
+        if self.renderable_data:
+            self.renderable_data.release_buffers()
+            
+    def ___update_renderable_data(self) -> None:
+        if isinstance(self.data, Mesh):
+            if self.renderable_data is None:
+                self.renderable_data = RenderableMesh()
+
+            mode, positions, normals, uvs, colors, count = self.data.get_render_arrays()
+            self.renderable_data.update_buffers(mode, positions, normals, uvs, colors, count)
+            self.data.is_render_data_dirty = False
+            
+        elif self.renderable_data is not None:
+            self.renderable_data.release_buffers()
+            self.renderable_data = None
