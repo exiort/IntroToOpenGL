@@ -1,4 +1,4 @@
-# CENG 487 Assignment 6 by
+# CENG 487 Assignment6 by
 # Bugrahan Imal
 # StudentId: 280201012
 # June 2025
