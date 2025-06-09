@@ -3,7 +3,7 @@
 # StudentId: 280201012
 # June 2025
 
-from OpenGL.GL import GL_COMPILE_STATUS, GL_FALSE, GL_LINK_STATUS, glAttachShader, glCompileShader, glCreateProgram, glCreateShader, glDeleteProgram, glDeleteShader, glDetachShader, glGetProgramInfoLog, glGetProgramiv, glGetShaderInfoLog, glGetShaderiv, glGetUniformLocation, glLinkProgram, glShaderSource, glUniform1f, glUniform3fv, glUniformMatrix4fv, glUseProgram, GL_TRUE
+from OpenGL.GL import GL_COMPILE_STATUS, GL_FALSE, GL_LINK_STATUS, glAttachShader, glCompileShader, glCreateProgram, glCreateShader, glDeleteProgram, glDeleteShader, glDetachShader, glGetProgramInfoLog, glGetProgramiv, glGetShaderInfoLog, glGetShaderiv, glGetUniformLocation, glLinkProgram, glShaderSource, glUniform1f, glUniform3fv, glUniform4fv, glUniformMatrix4fv, glUseProgram, GL_TRUE, glUniform1i
 
 import numpy as np
 
@@ -140,4 +140,19 @@ class Shader:
 
         glUniform3fv(loc, 1, vector_data)
 
-    
+    def set_uniform_1i(self, name:str, value:int) -> None:
+        loc = self.get_uniform_location(name)
+        if loc != -1:
+            glUniform1i(loc, value)
+
+    def set_uniform_vec4d(self, name:str, vector_data:np.ndarray) -> None:
+        loc = self.get_uniform_location(name)
+        if loc == -1: return
+
+        glUniform4fv(loc, 1 , vector_data)
+
+    def set_uniform_1b(self, name:str, value:bool) -> None:
+        loc = self.get_uniform_location(name)
+        if loc == -1: return
+
+        glUniform1i(loc, 1 if value else 0)

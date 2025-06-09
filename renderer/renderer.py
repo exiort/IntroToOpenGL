@@ -3,7 +3,7 @@
 # StudentId: 280201012
 # June 2025
 
-from OpenGL.GL import glDrawArrays, glUseProgram
+from OpenGL.GL import glDrawArrays, glUseProgram, glActiveTexture, glBindTexture, GL_TEXTURE_2D, GL_TEXTURE0, GL_TEXTURE1
 from math3d import Mat3D
 from camera import Camera
 from geometry import Mesh
@@ -27,7 +27,7 @@ class Renderer:
 
     @staticmethod
     def __prepare_and_set_uniforms(obj, view_matrix:np.ndarray, projection_matrix:np.ndarray) -> bool:
-        if obj.shader is None or obj.shader.program_id == -1:
+        if obj.shader is None or obj.shader.program_id == -1 or obj.material is None:
             return False
 
         obj.shader.use()
@@ -38,6 +38,22 @@ class Renderer:
         obj.shader.set_uniform_mat4d("view", view_matrix, True)
         obj.shader.set_uniform_mat4d("projection", projection_matrix, True)
 
+        material = obj.material
+        obj.shader.set_uniform_1b("useRawColor", material.use_raw_color)
+
+        if material.use_raw_color:
+            raw_color = np.array(material.raw_color.flatten(), dtype=np.float32)
+            obj.shader.set_uniform_vec4d("rawColor", raw_color)
+        else:
+            glActiveTexture(GL_TEXTURE0)
+            glBindTexture(GL_TEXTURE_2D, material.texture_id1)
+            obj.shader.set_uniform_1i("texture1", 0)
+        
+            glActiveTexture(GL_TEXTURE1)
+            glBindTexture(GL_TEXTURE_2D, material.texture_id2)
+            obj.shader.set_uniform_1i("texture2", 1) 
+            obj.shader.set_uniform_1f("blendFactor", material.blend_factor)
+        
         return True
 
     @staticmethod
@@ -58,7 +74,7 @@ class Renderer:
             return
         
         for obj in scene.get_visible_objects():
-            if not isinstance(obj.data, Mesh):
+            if not isinstance(obj.data, Mesh) or obj.material is None:
                 continue
 
             obj.sync_gpu_representation()
