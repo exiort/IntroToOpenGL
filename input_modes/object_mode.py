@@ -2,7 +2,7 @@
 # Bugrahan Imal
 # StudentId: 280201012
 # May 2025
-from geometry.mesh import Mesh
+from geometry import Mesh, Material
 from .base_mode import BaseMode
 from math3d import Mat3D
 
@@ -17,9 +17,15 @@ class ObjectMode:
         
     def handle_key_press(self, key:bytes) -> bool:
         if key == b'+':
-            return self.__handle_subdivision(True)
+            if self.base_mode.ctrl_key_pressed:
+                return self.__handle_subdivision(True)
+            else:
+                return self.__handle_blend(True)
         elif key == b'-':
-            return self.__handle_subdivision(False)
+            if self.base_mode.ctrl_key_pressed:
+                return self.__handle_subdivision(False)
+            else:
+                return self.__handle_blend(False)
         elif key == b'x':
             return self.__loop_active_object()
         
@@ -168,4 +174,18 @@ class ObjectMode:
         if obj is None:
             return False
         self.base_mode.scene.set_active_object(obj)
+        return True
+
+    def __handle_blend(self, increase:bool) -> bool:
+        active_obj = self.base_mode.scene.get_active_object()
+        if active_obj is None:
+            return False
+
+        material = active_obj.material
+        if not isinstance(material, Material):
+            return False
+        
+        factor = 0.05 * (1 if increase else -1)
+        material.blend_factor = min(1, max(0, material.blend_factor + factor))
+
         return True

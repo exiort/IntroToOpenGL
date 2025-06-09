@@ -6,7 +6,7 @@
 from __future__ import annotations
 from camera import Camera
 from math3d import Mat3D
-from geometry import Mesh
+from geometry import Mesh, Material
 from renderer import RenderableMesh
 from shaders import Shader
 
@@ -20,6 +20,7 @@ class Object3D:
     is_transform_changed:bool
 
     data:Mesh|Camera
+    material:Material|None
     renderable_data:RenderableMesh|None
     shader:Shader
     
@@ -34,7 +35,11 @@ class Object3D:
             self.data = Mesh()
         else:
             self.data = data
-
+            
+        self.material = None
+        if isinstance(self.data, Mesh):
+            self.material = Material()
+            
         self.renderable_data = None
         self.shader = shader
         self.___update_renderable_data()

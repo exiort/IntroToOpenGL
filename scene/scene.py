@@ -3,9 +3,10 @@
 # StudentId: 280201012
 # April 2025
 
+from geometry import Material
 from camera import Camera
 from generators import create_grid_lines
-from math3d import Vec3D
+from math3d import Vec3D, Vec4D
 from object3d import Object3D
 from shaders import Shader
 from .collection import Collection
@@ -22,13 +23,16 @@ class Scene:
     default_camera_target:Vec3D
     default_camera_up:Vec3D
 
+    default_material:Material
+    
     shader:Shader
     
     def __init__(self, shader:Shader) -> None:
         self.shader = shader
         
         self.root_collection = Collection("RootCollection")
-
+        self.object_default_material = Material()
+        
         self.default_camera_position = Vec3D(0, 40, 15)
         self.default_camera_target = Vec3D(0, 0, 0)
         self.default_camera_up = Vec3D(0, 0, 1, 0)
@@ -37,6 +41,10 @@ class Scene:
         
         grid_collection = Collection("WorldGrid")
         for obj in create_grid_lines(shader, count=71):
+            material = Material()
+            material.use_raw_color = True
+            material.raw_color = Vec4D(0.75, 0.75, 0.75, 1)
+            obj.material = material
             grid_collection.add_object(obj, is_visible=True)
         self.root_collection.add_child(grid_collection)
             
@@ -56,6 +64,9 @@ class Scene:
         return self.root_collection.get_all_visible_object()
 
     def add_object(self, obj:Object3D, is_visible:bool=True) -> None:
+        if obj.material:
+            obj.material = self.object_default_material.copy()
+            
         self.root_collection.add_object(obj, is_visible)
 
     def remove_object(self, obj:Object3D) -> None:

@@ -82,12 +82,8 @@ class SceneMode:
         return True
     
     def __load_object(self) -> bool:
-        active_obj = self.base_mode.scene.get_active_object()
-        if active_obj is not None:
-            return False
-
         filepath = input("Please Provide path of .obj file:")
-        obj = parse_file(filepath, Vec3D(0, 1, 0, 0), Vec3D(0, 0, -1, 0))
+        obj = parse_file(filepath,self.base_mode.scene.shader, Vec3D(0, 1, 0, 0), Vec3D(0, 0, -1, 0))
         if obj is None:
             return False
 

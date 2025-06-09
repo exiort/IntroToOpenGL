@@ -31,6 +31,5 @@ def reorient_object(obj:Object3D, source_up:Vec3D, source_fwd:Vec3D) -> None:
         [0.0, 0.0, 0.0, 1.0]
     ])
 
-    obj.do_transform(M_source_inv)
-    obj.do_transform(M_target)
-    obj.apply_transform()
+    reorient_matrix = M_target @ M_source_inv
+    obj.do_transform(reorient_matrix)

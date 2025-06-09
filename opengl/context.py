@@ -8,7 +8,10 @@ from OpenGL.GL import (
     glDisable, glEnable, glEnd, glLineWidth, glLoadIdentity, glMatrixMode, glPopMatrix,
     glPushMatrix, glRasterPos2f, glShadeModel, glVertex2f, glViewport,
     GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT, GL_DEPTH_TEST, GL_LESS,
-    GL_MODELVIEW, GL_PROJECTION, GL_SMOOTH
+    GL_MODELVIEW, GL_PROJECTION, GL_SMOOTH, glGenTextures, glBindTexture,
+    glTexParameteri, glTexImage2D, GL_TEXTURE_2D, GL_RGBA, GL_UNSIGNED_BYTE,
+    GL_TEXTURE_WRAP_S, GL_TEXTURE_WRAP_T, GL_REPEAT, GL_TEXTURE_MIN_FILTER,
+    GL_TEXTURE_MAG_FILTER, GL_LINEAR, glActiveTexture, GL_TEXTURE0, GL_TEXTURE1
 )
 from OpenGL.GLU import gluOrtho2D
 
@@ -41,7 +44,7 @@ from ui import UIManager
 from renderer import Renderer
 from .timer import Timer
 from .input_handler import InputHandler
-
+from PIL import Image
 
 
 class GLContext:
@@ -86,7 +89,13 @@ class GLContext:
         self.scene = Scene(shader)
         self.input_handler = InputHandler(self.scene)
         self.ui_manager = UIManager()
-        
+
+        texture_1 = self.__load_texture("textures/deepslate.png")
+        texture_2 = self.__load_texture("textures/deepslate_diamond.png")
+        if self.scene.object_default_material:
+            self.scene.object_default_material.set_textures(texture_1, texture_2)
+            self.scene.object_default_material.use_raw_color = False
+            
         glutDisplayFunc(self.display)
         glutIdleFunc(self.display)
         glutReshapeFunc(self.reshape)
@@ -241,3 +250,20 @@ class GLContext:
         if redraw_needed: glutPostRedisplay()
 
    
+    def __load_texture(self, filepath: str) -> int:
+        try:
+            img = Image.open(filepath).convert("RGBA")
+            img_data = img.tobytes("raw", "RGBA", 0, -1)
+            
+            tex_id = glGenTextures(1)
+            glBindTexture(GL_TEXTURE_2D, tex_id)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.width, img.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
+            
+            return tex_id
+        except Exception as e:
+            print(e)
+            return -1
