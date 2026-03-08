@@ -88,3 +88,9 @@ The application uses different interaction modes for various tasks. Press **`M`*
 
 * **Linux/Wayland Compatibility**: Modern Linux distributions using the Wayland display server may experience immediate crashes due to PyOpenGL's strict GLX tracking. If you experience context retrieval errors, a simple monkey-patch to PyOpenGL's `contextdata.getContext` is required in your entry file.
 * **Performance**: The current Catmull-Clark subdivision implementation runs entirely on the CPU using Python. High subdivision levels (4+) on complex geometry may cause temporary freezes while the topology cache builds.
+
+---
+
+## 📜 License
+
+This project is licensed under the MIT License. Copyright (c) 2026 Buğrahan İmal. You are free to use, copy, modify, merge, publish, and distribute this software as per the license conditions.
