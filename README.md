@@ -1,104 +1,90 @@
-# Object3D Transformations and Geometry Project
+# Python Custom 3D Graphics Engine
 
 ## Overview
 
-This project implements a 3D graphics application foundation featuring hierarchical scene management, an interactive camera, stack-based transformations, procedural geometry generation, and dynamic mesh subdivision. Key components include:
+This project is a custom-built, lightweight 3D graphics application developed in Python. It serves as a comprehensive educational engine demonstrating core computer graphics principles from scratch. Bypassing heavy commercial libraries, this engine implements its own 3D mathematics, hierarchical scene management, procedural geometry generation, and a custom implementation of the Catmull-Clark subdivision surface algorithm. 
 
-- **Scene / Collection**: Manages a hierarchy of 3D objects within the scene.
-- **Object3D**: Core structure for scene nodes, holding transformation data (position, rotation, scale) and linking to geometry or camera data. Using a matrix stack for transformations.
-- **Camera**: Represents the viewpoint, handling view and projection matrix calculations (including perspective and orthographic). Supports interactive controls.
-- **Mesh / Geometry**: Represents 3D shapes using vertices, edges, and faces. The `Mesh` class now includes infrastructure for dynamic subdivision levels and caching.
-- **Generators**: Located in the `generators` directory, responsible for procedurally creating primitive shapes. Includes helpers for generating oriented quads (`_create_oriented_quad`), polygon disks (`_create_polygon_disk`), and merging geometry parts (`merge_geometry_parts`).
-- **Math3D**: Provides `Vec3D` and `Mat3D` classes for vector and matrix operations, including standard transformations and arbitrary axis rotation (`rotation_around_axis`).
-- **OpenGL Context & Input**: Separated OpenGL context setup (`context.py`) and input handling (`input.py`). `InputHandler` processes generic input events, decoupled from GLUT.
-- **Renderer**: Basic OpenGL immediate mode renderer (`renderer.py`).
+Rendering is handled via PyOpenGL using programmable shaders (GLSL) and Vertex Buffer Objects (VBOs), providing a modern, efficient graphics pipeline.
 
-## Highlights
+## Key Features
 
-- Hierarchical scene graph using `Scene` and `Collection`.
-- Interactive Camera Controls:
-  - WASD movement (forward/back/strafe)
-  - Mouse orbit (e.g., X + Left Drag) around target
-  - Mouse pan (e.g., X + Right Drag) to look around
-  - Mouse wheel dolly to zoom in/out
-  - 'F' key to reset the camera view
-- Dynamic Mesh Subdivision:
-  - '+' / '-' keys adjust the subdivision level of the active mesh object
-  - `Mesh` class handles subdivision levels and caching
-  - Linear subdivision algorithm implemented
-- Matrix Math: `Mat3D` class supports standard transformations and rotation around an arbitrary axis. Z-Up coordinate system used.
-- Input Handling: Decoupled `InputHandler` class manages user input logic.
+* **Custom Math Library (`math3d`)**: A standalone implementation of vector and matrix mathematics (`Vec2D`, `Vec3D`, `Vec4D`, `Mat3D`) handling perspective/orthographic projections, cross/dot products, and arbitrary axis rotations without relying on external math libraries.
+* **Modern OpenGL Pipeline (`renderer` & `shaders`)**: Utilizes VAOs and VBOs for efficient batch rendering. Custom GLSL shaders support dual-texture blending and raw color rendering.
+* **Dynamic Mesh Subdivision**: Implements the Catmull-Clark subdivision algorithm from scratch (`MeshAlgorithms`), featuring a robust caching system to smoothly toggle between subdivision levels in real-time.
+* **Procedural Geometry Generation**: Built-in factories to procedurally generate complex 3D primitives including Tori, Spheres, Pyramids, Cylinders, Cubes, Tetrahedrons, and 2D shapes.
+* **Hierarchical Scene Graph**: Manages objects via a `Scene` and `Collection` architecture, allowing for parent-child relationship management and visibility toggling.
+* **Undo/Redo Transformation Stack**: A robust transformation manager utilizing `do_stack`, `redo_stack`, and `temporary_stack` matrices to allow seamless undo/redo of object translations, rotations, and scaling.
+* **OBJ File Parsing**: A custom parser to load and reorient external 3D models from `.obj` files into the custom Winged-Edge inspired mesh structure.
+* **State-Machine Input Handling**: A highly decoupled input system separating controls into distinct modes (Camera, Object, Scene) for a clean user experience.
 
-## Directory Structure
+## Project Architecture
 
-```
-project_root/
-│
-├── camera/
-│   └── camera.py
-│
-├── generators/
-│   ├── basefactory2d.py
-│   ├── factory2d.py
-│   ├── factory3d.py
-│   ├── grid.py
-│   ├── line.py
-│   └── utils.py
-│
-├── geometry/
-│   ├── edge.py
-│   ├── face.py
-│   ├── mesh.py
-│   └── vertex.py
-│
-├── math3d/
-│   ├── mat3d.py
-│   └── vec3d.py
-│
-├── object3d/
-│   └── object3d.py
-│
-├── opengl/
-│   ├── context.py
-│   ├── input.py
-│   ├── renderer.py
-│   └── timer.py
-│
-├── scene/
-│   ├── collection.py
-│   └── scene.py
-│
-├── main.py
-├── .gitignore
-├── README.md
-└── requirements.txt
+* **`camera/`**: Viewport management supporting both perspective and orthographic projections.
+* **`generators/`**: Procedural mesh factories for 2D and 3D primitives.
+* **`geometry/`**: The core topological data structures (`Vertex`, `Edge`, `Face`, `Mesh`) and the Catmull-Clark subdivision logic.
+* **`input_modes/`**: Context-aware input handling separating global, scene, object, and camera controls.
+* **`math3d/`**: The proprietary linear algebra and matrix transformation library.
+* **`object3d/`**: The primary entity node managing spatial transformations, materials, and linking data to the renderer.
+* **`opengl/`**: FreeGLUT window context initialization, main loop timing, and raw input delegation.
+* **`parser/`**: External `.obj` file loading and geometry extraction.
+* **`renderer/`**: OpenGL state management, buffer generation, and draw calls.
+* **`scene/`**: Global state management holding the active camera, collections, and world grid.
+* **`shaders/`**: GLSL shader compilation, linking, and uniform caching.
+* **`ui/`**: On-Screen Display (OSD) rendering using GLUT bitmap characters to show active states and help menus.
+
+## Installation & Requirements
+
+Ensure you have Python 3 installed. The project relies on the following dependencies for windowing, buffer management, and image loading:
+
+```bash
+pip install requirements.txt 
 ```
 
-## Controls Summary
+To launch the application, simply run the main entry point:
 
-- **W/A/S/D**: Move camera Forward/Left/Backward/Right
-- **Left Drag**: Orbit camera around its target
-- **Right Drag**: Pan camera (look around)
-- **Mouse Wheel**: Dolly camera (zoom in/out)
-- **F**: Reset camera view
-- **0**: Toggle grid visibility
-- **1**: Add a new Box object (if none active)
-- **2**: Remove the active Box object
-- **+**: Increase active object's subdivision level
-- **-**: Decrease active object's subdivision level
-- **Q**: Quit application
+```bash
+python main.py
+```
 
-## Notes / Current Status
+## Controls
 
-- The core application structure (Scene, Object3D, Mesh, Math, Context, Input) is functional. Camera controls and the basic subdivision mechanism are working.
-- **Primitive Generation**: Currently limited, with `create_box` implemented using the procedural helper functions. Significant effort was spent debugging procedural cylinder generation (`create_cylinder`) using the geometry merging function (`merge_geometry_parts`). This revealed subtle challenges in vertex merging/face reconstruction which remain unresolved and is postponed. Implementation of other primitives (Sphere, Plane, Torus, etc.) is planned for subsequent development stages.
-- **Scene/Collection**: The Scene/Collection hierarchy provides a solid foundation for managing more complex scenes in the future, although current scene interaction is basic (add/remove one object).
-- **Controls**: The implemented controls provide good interactivity. Modifier key detection (`Alt`, `Ctrl`, `Shift`) via `glutGetModifiers` proved unreliable in the development environment.
-- **Generators Module**: The structure includes helpers like `_create_oriented_quad`, `_create_polygon_disk`, and `merge_geometry_parts`. The organization within the `generators` folder will be further refined as more primitives are added.
-- **Subdivision**: The `Mesh` class supports subdivision levels and caching. Currently, only a linear subdivision algorithm (`_split_geometry`) is implemented. The `_smooth_vertices` method exists as a placeholder for future smoothing algorithms (e.g., Catmull-Clark).
-- **Normals**: Calculating and storing normal vectors for faces has been deferred due to the complexity involved with generic polygons and subdivision.
-- **GitHub Repository**: All assignments completed throughout this semester will be available in the `github.com/exiort/IntroToOpenGL` repository. In line with the incremental nature of the assignments, each week's submission will be stored in a dedicated branch named `week-n`. It is highly recommended to check these branches weekly to follow the progress and changes over time.
+The application uses different interaction modes for various tasks. Press **`M`** to cycle through the active modes. The current active mode, object, and subdivision level are displayed on the OSD.
 
----
+**Global Controls (Always Available)**
+* **M**: Cycle interaction modes.
+* **H**: Toggle Help Menu / Cycle Help Pages.
+* **Esc**: Close Help Menu.
+* **Q**: Quit Application.
+* **Ctrl + Z**: Undo last object transformation.
+* **Ctrl + Shift + Z**: Redo last object transformation.
 
-© Bugrahan Imal - April, 2025
+**Camera Mode**
+* **Alt + Left Mouse Drag**: Orbit Camera (Rotate around target).
+* **Alt + Middle Mouse Drag**: Pan Camera.
+* **Mouse Wheel**: Dolly Camera (Zoom In/Out).
+* **F**: Reset Camera to Default Position.
+
+**Object Mode**
+* **+ (Plus)**: Increase Subdivision Level of Active Mesh.
+* **- (Minus)**: Decrease Subdivision Level of Active Mesh.
+* **Ctrl + '+' / '-'**: Adjust texture blending factor on the active material.
+* **Ctrl + Mouse Drag**: Translate Active Object (LMB=X, RMB=Y, MMB=Z).
+* **Alt + Mouse Drag**: Rotate Active Object (LMB=X, RMB=Y, MMB=Z).
+* **Shift + Mouse Drag**: Scale Active Object (LMB=X, RMB=Y, MMB=Z).
+* **X**: Cycle active focus through objects in the scene.
+
+**Scene Mode**
+* **Ctrl + 1**: Add Predefined Box Object.
+* **Ctrl + 2**: Add Predefined Cylinder Object.
+* **Ctrl + 3**: Add Predefined Pyramid Object.
+* **Ctrl + 4**: Add Predefined Sphere Object.
+* **Ctrl + 5**: Add Predefined Torus Object.
+* **Ctrl + 6**: Add Predefined Tetrahedron Object.
+* **Ctrl + O**: Load an external `.obj` file.
+* **Delete**: Remove Active Object.
+* **Ctrl + 0**: Toggle Grid Visibility.
+
+## Technical Notes
+
+* **Linux/Wayland Compatibility**: Modern Linux distributions using the Wayland display server may experience immediate crashes due to PyOpenGL's strict GLX tracking. If you experience context retrieval errors, a simple monkey-patch to PyOpenGL's `contextdata.getContext` is required in your entry file.
+* **Performance**: The current Catmull-Clark subdivision implementation runs entirely on the CPU using Python. High subdivision levels (4+) on complex geometry may cause temporary freezes while the topology cache builds.
